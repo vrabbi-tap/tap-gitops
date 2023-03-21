@@ -1,3 +1,6 @@
 tap_install:
+  version:
+    package_repo_bundle_tag: "1.5.0-rc.1"
+    package_version: "1.5.0-rc.1"
   package_repository:
-    oci_repository: registry.tanzu.vmware.com/tanzu-application-platform/tap-packages
+    oci_repository: harbor.vrabbi.cloud/tap/tap-packages
