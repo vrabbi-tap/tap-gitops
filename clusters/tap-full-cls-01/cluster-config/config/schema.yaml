@@ -1,0 +1,32 @@
+#@data/values-schema
+#@overlay/match-child-defaults missing_ok=True
+---
+custom:
+  operators:
+    tanzu_data_services_values:
+      pkgr_version: "1.7.0"
+      pkgr_repo: "harbor.vrabbi.cloud/tds/tds-packages"
+      postgresql:
+        enabled: true
+        pkgi_version: "2.0.1"
+      mysql:
+        enabled: true
+        pkgi_version: "1.7.0"
+    rabbitmq_oss:
+      enabled: true
+  compositions:
+    mysql:
+      enabled: true
+    postgresql:
+      enabled: true
+    rabbitmq:
+      enabled: true
+    mssql:
+      enabled: true
+    mongodb:
+      enabled: true
+  tbs_full_dependencies:
+    enabled: true
+    pkgr_version: "1.10.6"
+    pkgr_repo_url: harbor.vrabbi.cloud/tap/tbs-full-deps
+  
