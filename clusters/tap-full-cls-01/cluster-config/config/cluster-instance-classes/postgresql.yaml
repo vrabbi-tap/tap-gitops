@@ -1,0 +1,224 @@
+
+#@ load("@ytt:data", "data")
+
+#@ if data.values.custom.compositions.postgresql.enabled:
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xpostgresqlinstances.tap.terasky.com
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  connectionSecretKeys:
+  - host
+  - password
+  - port
+  - provider
+  - type
+  - username
+  - database
+  group: tap.terasky.com
+  names:
+    kind: XPostgreSQLInstance
+    plural: xpostgresqlinstances
+  claimNames:
+    kind: PostgreSQLInstance
+    plural: postgresqlinstances    
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            description: The OpenAPIV3Schema of this Composite Resource Definition.
+            properties:
+              storageGB:
+                description: The desired storage capacity of a single replica, in GB.
+                type: integer               
+            type: object
+        type: object
+    served: true
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xpostgresqlinstances.tap.terasky.com
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  compositeTypeRef:
+    apiVersion: tap.terasky.com/v1alpha1
+    kind: XPostgreSQLInstance
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
+  resources:
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: Namespace
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: regsecret
+              namespace: ""
+              annotations:
+                secretgen.carvel.dev/image-pull-secret: ""
+            type: kubernetes.io/dockerconfigjson
+            data: 
+              .dockerconfigjson: "e30K"
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: sql.tanzu.vmware.com/v1
+            kind: Postgres
+            metadata:
+              namespace: ""
+            spec:
+              imagePullSecret: 
+                name: regsecret
+              highAvailability:
+                enabled: false
+            storageSize: 1Gi
+    patches:
+      - fromFieldPath: metadata.name
+        toFieldPath: spec.forProvider.manifest.metadata.namespace
+        type: FromCompositeFieldPath         
+      - fromFieldPath: metadata.name
+        toFieldPath: spec.forProvider.manifest.metadata.name
+        type: FromCompositeFieldPath
+      - fromFieldPath: spec.replicas
+        toFieldPath: spec.forProvider.manifest.spec.replicas
+        type: FromCompositeFieldPath
+      - fromFieldPath: spec.storageGB
+        toFieldPath: spec.forProvider.manifest.spec.storageSize
+        transforms:
+        - string:
+            fmt: '%dGi'
+            type: Format
+          type: string
+        type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: secretgen.carvel.dev/v1alpha1
+            kind: SecretTemplate
+            metadata:
+              namespace: ""
+            spec:
+              inputResources:
+              - name: creds
+                ref:
+                  apiVersion: v1
+                  kind: Secret
+              template:
+                type: connection.crossplane.io/v1alpha1
+                data:
+                  provider: "$(.creds.data.provider)"
+                  type: "$(.creds.data.type)"
+                  host: "$(.creds.data.host)"
+                  port: "$(.creds.data.port)"
+                  username: "$(.creds.data.username)"
+                  password: "$(.creds.data.password)"
+                  database: "$(.creds.data.database)"
+    patches: 
+      - fromFieldPath: metadata.name
+        toFieldPath: spec.forProvider.manifest.metadata.namespace
+        type: FromCompositeFieldPath         
+      - fromFieldPath: metadata.name
+        toFieldPath: spec.forProvider.manifest.spec.inputResources[0].ref.name
+        transforms:
+        - string:
+            fmt: '%s-app-user-db-secret'
+            type: Format
+          type: string
+        type: FromCompositeFieldPath
+      - fromFieldPath: spec.writeConnectionSecretToRef.name
+        toFieldPath: spec.forProvider.manifest.metadata.name
+        type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: secretgen.carvel.dev/v1alpha1
+            kind: SecretExport
+            metadata:
+              namespace: ""
+    patches:
+      - fromFieldPath: metadata.name
+        toFieldPath: spec.forProvider.manifest.metadata.namespace
+        type: FromCompositeFieldPath         
+      - fromFieldPath: spec.writeConnectionSecretToRef.name
+        toFieldPath: spec.forProvider.manifest.metadata.name
+        type: FromCompositeFieldPath
+      - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+        toFieldPath: spec.forProvider.manifest.spec.toNamespace
+        type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: secretgen.carvel.dev/v1alpha1
+            kind: SecretImport
+            spec:
+              fromNamespace: ""
+    patches:
+      - fromFieldPath: spec.writeConnectionSecretToRef.name
+        toFieldPath: spec.forProvider.manifest.metadata.name
+        type: FromCompositeFieldPath
+      - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+        toFieldPath: spec.forProvider.manifest.metadata.namespace
+        type: FromCompositeFieldPath
+      - fromFieldPath: metadata.name
+        toFieldPath: spec.forProvider.manifest.spec.fromNamespace
+        type: FromCompositeFieldPath
+
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClusterInstanceClass
+metadata:
+  name: postgresql
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  description:
+    short: PostgreSQL
+  provisioner:
+    crossplane:
+      compositeResourceDefinition: xpostgresqlinstances.tap.terasky.com
+#@ end
