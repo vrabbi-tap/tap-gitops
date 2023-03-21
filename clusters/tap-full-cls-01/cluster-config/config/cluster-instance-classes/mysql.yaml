@@ -1,3 +1,6 @@
+#@ load("@ytt:data", "data")
+
+#@ if data.values.custom.compositions.mysql.enabled:
 ---
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -215,3 +218,4 @@ spec:
   provisioner:
     crossplane:
       compositeResourceDefinition: xmysqlinstances.tap.terasky.com
+#@ end
