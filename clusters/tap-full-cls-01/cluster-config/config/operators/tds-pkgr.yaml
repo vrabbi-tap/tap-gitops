@@ -1,6 +1,6 @@
 #@ load("@ytt:data", "data")
 ---
-#@ if data.values.custom.tanzu_data_services.postgresql.enabled or data.values.custom.tanzu_data_services.mysql.enabled:
+#@ if data.values.custom.operators.tanzu_data_services.postgresql.enabled or data.values.custom.operators.tanzu_data_services.mysql.enabled:
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageRepository
 metadata:
@@ -11,5 +11,5 @@ metadata:
 spec:
   fetch:
     imgpkgBundle:
-      image: #@ "{}:{}".format(data.values.custom.tanzu_data_services.pkgr_repo_url,data.values.custom.tanzu_data_services.pkgr_version)
+      image: #@ "{}:{}".format(data.values.custom.operators.tanzu_data_services.pkgr_repo_url,data.values.custom.operators.tanzu_data_services.pkgr_version)
 #@ end
