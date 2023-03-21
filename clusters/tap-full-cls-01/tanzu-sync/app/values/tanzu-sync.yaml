@@ -1,0 +1,7 @@
+---
+git:
+  url: git@github.com:vrabbi-tap/tap-gitops.git
+  ref: origin/master
+  sub_path: clusters/tap-full-cls-01/cluster-config
+tap_package_repository:
+  oci_repository: registry.tanzu.vmware.com/tanzu-application-platform/tap-packages
