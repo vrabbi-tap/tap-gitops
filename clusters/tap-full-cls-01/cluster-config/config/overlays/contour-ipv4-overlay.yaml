@@ -3,6 +3,10 @@ kind: Secret
 metadata:
   name: contour-ipv4-overlay
   namespace: tap-install
+  annotations:
+    kapp.k14s.io/change-group: overlays
+    kapp.k14s.io/change-rule.0: "upsert before upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete after deleting pkgi"
 type: Opaque
 stringData:
   contour-ipv4-overlay.yaml: |
