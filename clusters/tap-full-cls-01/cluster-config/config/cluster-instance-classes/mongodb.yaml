@@ -1,3 +1,6 @@
+#@ load("@ytt:data", "data")
+
+#@ if data.values.custom.compositions.mongodb.enabled:
 ---
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -306,3 +309,4 @@ spec:
           provider: bitnami
           type: mongodb
       compositionUpdatePolicy: Manual
+#@ end
