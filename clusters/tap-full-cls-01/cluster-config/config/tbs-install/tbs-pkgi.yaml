@@ -1,5 +1,6 @@
 #@ load("@ytt:data", "data")
 ---
+#@ if data.values.custom.tbs_full_dependencies.enabled:
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageInstall
 metadata:
@@ -14,4 +15,5 @@ spec:
   packageRef:
     refName: full-tbs-deps.tanzu.vmware.com
     versionSelection:
-      constraints: 1.10.6
+      constraints: #@ data.values.custom.tbs_full_dependencies.pkgr_version
+#@ end
