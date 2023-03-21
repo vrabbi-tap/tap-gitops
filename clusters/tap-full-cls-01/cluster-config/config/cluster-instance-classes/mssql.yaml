@@ -1,0 +1,314 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: crossplane-provider-sql
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  package: crossplane/provider-sql:v0.6.0
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xsqlserverinstances.tap.terasky.com
+spec:
+  connectionSecretKeys:
+  - provider
+  - type
+  - host
+  - port
+  - database
+  - username
+  - password
+  group: tap.terasky.com
+  names:
+    kind: XSQLServerInstance
+    plural: xsqlserverinstances
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            description: The OpenAPIV3Schema of this Composite Resource Definition.
+            properties:
+              storageGB:
+                default: 10
+                enum:
+                - 10
+                - 20
+                - 50
+                description: The desired storage capacity of the database, in Gigabytes.
+                type: integer
+            type: object
+        type: object
+    served: true
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xsqlserverinstances.tap.terasky.com
+  labels:
+    provider: terasky
+    type: sqlserver
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  compositeTypeRef:
+    apiVersion: tap.terasky.com/v1alpha1
+    kind: XSQLServerInstance
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
+  resources:
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: Namespace
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: mssql
+            spec:
+              selector:
+                app: mssql
+              ports:
+                - protocol: TCP
+                  port: 1433
+                  targetPort: 1433
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: mssql
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: mssql
+              template:
+                metadata:
+                  labels:
+                    app: mssql
+                spec:
+                  terminationGracePeriodSeconds: 30
+                  hostname: mssqlinst
+                  securityContext:
+                    fsGroup: 10001
+                  containers:
+                  - name: mssql
+                    image: mcr.microsoft.com/mssql/server:2019-latest
+                    resources:
+                      requests:
+                        memory: "2G"
+                        cpu: "2000m"
+                      limits:
+                        memory: "2G"
+                        cpu: "2000m"
+                    ports:
+                    - containerPort: 1433
+                    env:
+                    - name: MSSQL_PID
+                      value: "Developer"
+                    - name: ACCEPT_EULA
+                      value: "Y"
+                    - name: MSSQL_SA_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: mssql
+                          key: MSSQL_SA_PASSWORD
+                    volumeMounts:
+                    - name: mssqldb
+                      mountPath: /var/opt/mssql
+                  volumes:
+                  - name: mssqldb
+                    persistentVolumeClaim:
+                      claimName: mssql-data
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: PersistentVolumeClaim
+            metadata:
+              name: mssql-data
+            spec:
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 8Gi
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: spec.storageGB
+      toFieldPath: spec.forProvider.manifest.spec.resources.requests.storage
+      transforms:
+      - string:
+          fmt: '%dGi'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: secretgen.k14s.io/v1alpha1
+            kind: Password
+            metadata:
+              name: mssql
+            spec:
+              length: 32
+              uppercaseLetters: 1
+              lowercaseLetters: 1
+              digits: 1
+              secretTemplate:
+                stringData:
+                  MSSQL_SA_PASSWORD: $(value)
+                type: Opaque
+        providerConfigRef:
+          name: bitnami-services-provider-kubernetes
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        references:
+        - patchesFrom:
+            apiVersion: v1
+            kind: Secret
+            name: mssql
+            namespace: ""
+            fieldPath: data.MSSQL_SA_PASSWORD
+          toFieldPath: data.password
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: ""
+            type: connection.crossplane.io/v1alpha1
+            stringData:
+              port: '1433'
+              provider: terasky
+              type: sqlserver
+              username: sa
+              database: ""
+              host: ""
+              endpoint: ""
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.references[0].patchesFrom.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.stringData.database
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.stringData.host
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: 'mssql.%s.svc.cluster.local'
+          type: Format
+        type: string
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.stringData.endpoint
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: 'mssql.%s.svc.cluster.local'
+          type: Format
+        type: string
+    - fromFieldPath: spec.writeConnectionSecretToRef.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+    - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: mssql.sql.crossplane.io/v1alpha1
+      kind: ProviderConfig
+      metadata:
+        name: mssql
+      spec:
+        credentials:
+          source: MSSQLConnectionSecret
+          connectionSecretRef:
+            namespace: ""
+        sslMode: require
+    patches:
+    - fromFieldPath: spec.writeConnectionSecretToRef.name
+      toFieldPath: metadata.name
+    - fromFieldPath: spec.writeConnectionSecretToRef.name
+      toFieldPath: spec.credentials.connectionSecretRef.name
+    - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+      toFieldPath: spec.credentials.connectionSecretRef.namespace
+  - base:
+      apiVersion: mssql.sql.crossplane.io/v1alpha1
+      kind: Database
+      spec:
+        forProvider: {}
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: metadata.name
+    - fromFieldPath: spec.writeConnectionSecretToRef.name
+      toFieldPath: spec.providerConfigRef.name
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClusterInstanceClass
+metadata:
+  name: sqlserver-unmanaged
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  description:
+    short: SQL Server by TeraSky
+  provisioner:
+    crossplane:
+      compositeResourceDefinition: xsqlserverinstances.tap.terasky.com
+      compositionSelector:
+        matchLabels:
+          provider: terasky
+          type: sqlserver
+      compositionUpdatePolicy: Manual
