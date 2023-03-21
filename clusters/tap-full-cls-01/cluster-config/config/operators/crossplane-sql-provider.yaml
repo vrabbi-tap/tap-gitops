@@ -1,0 +1,14 @@
+#@ load("@ytt:data", "data")
+---
+#@ if data.values.custom.operators.crossplane_sql_provider.enabled:
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: crossplane-provider-sql
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  package: #@ "{}:{}".format(data.values.custom.operators.crossplane_sql_provider.provider_package,data.values.custom.operators.crossplane_sql_provider.provider_version)
+#@ end
