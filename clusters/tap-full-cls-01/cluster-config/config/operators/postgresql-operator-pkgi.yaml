@@ -1,6 +1,6 @@
 #@ load("@ytt:data", "data")
 ---
-#@ if data.values.custom.tanzu_data_services.postgresql.enabled:
+#@ if data.values.custom.operators.tanzu_data_services.postgresql.enabled:
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageInstall
 metadata:
@@ -15,5 +15,5 @@ spec:
   packageRef:
     refName: postgres-operator.sql.tanzu.vmware.com
     versionSelection:
-      constraints: #@ data.values.tanzu_data_services.postgresql.pkgi_version
+      constraints: #@ data.values.custom.operators.tanzu_data_services.postgresql.pkgi_version
 #@ end
