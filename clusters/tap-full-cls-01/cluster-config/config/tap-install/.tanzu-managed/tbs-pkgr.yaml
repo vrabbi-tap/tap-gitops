@@ -10,4 +10,4 @@ metadata:
 spec:
   fetch:
     imgpkgBundle:
-      image: #@ "{}:1.10.6".format(data.values.tap_install.package_repository.oci_repository)
+      image: harbor.vrabbi.cloud/tap/tbs-full-deps:1.10.6
