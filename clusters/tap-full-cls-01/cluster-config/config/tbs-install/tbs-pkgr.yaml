@@ -1,6 +1,6 @@
 #@ load("@ytt:data", "data")
 ---
-#@ id data.values.custom.tbs_full_dependencies.enabled:
+#@ if data.values.custom.tbs_full_dependencies.enabled:
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageRepository
 metadata:
