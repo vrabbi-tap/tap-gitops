@@ -1,0 +1,15 @@
+#@data/values-schema
+#@overlay/match-child-defaults missing_ok=True
+---
+tap_install:
+  secrets:
+    eso:
+      aws:
+        #! SecretStore config
+        tap_install_secrets:
+          roleARN: ""
+      #! ESO remoteRefs, by Kubernetes Secret name, then data[].secretkey
+      remote_refs:
+        tap_sensitive_values:
+          sensitive_tap_values_yaml:
+            key: dev/tap/sensitive-values.yaml

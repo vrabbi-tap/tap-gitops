@@ -1,0 +1,21 @@
+#@data/values-schema
+---
+secrets:
+  eso:
+    aws:
+      tanzu_sync_secrets:
+        roleARN: ""
+    remote_refs:
+      sync_git_ssh:
+        #@schema/type any=True
+        ssh_private_key:
+          key: dev/tanzu-sync/sync-git-ssh
+          property: ssh-privatekey
+        #@schema/type any=True
+        ssh_known_hosts:
+          key: dev/tanzu-sync/sync-git-ssh
+          property: ssh-knownhosts
+      install_registry_dockerconfig:
+        #@schema/type any=True
+        dockerconfigjson:
+          key: dev/tanzu-sync/install-registry-dockerconfig
