@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ootb-delivery-basic-overlay
+  namespace: tap-install
+type: Opaque
+stringData:
+  ootb-delivery-basic-overlay.yaml: |
+    #@ load("@ytt:overlay","overlay")
+    #@ load("_profiles.star", "profiles")
+    
+    #@ def cd_matcher():
+    apiVersion: carto.run/v1alpha1
+    kind: ClusterDelivery
+    metadata:
+      name: delivery-basic
+    #@ end
+    
+    #@ if profiles.is_any_enabled([profiles.full, profiles.light, profiles.iterate, profiles.run]):
+    #@ if profiles.is_pkg_enabled("ootb-delivery-basic.tanzu.vmware.com"):
+    #@overlay/match by=overlay.subset(cd_matcher())
+    ---
+    spec:
+      #@overlay/match missing_ok=True
+      params:
+      - name: registry_change
+        default:
+          origin: OLD_REGISTRY_PLACEHOLDER
+          pullFrom: NEW_REGISTRY_PLACEHOLDER
+    #@ end
+    #@ end
