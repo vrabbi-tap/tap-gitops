@@ -1,13 +1,6 @@
-apiVersion: pkg.crossplane.io/v1
-kind: Provider
-metadata:
-  name: crossplane-provider-sql
-  annotations:
-    kapp.k14s.io/change-group: compositions
-    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
-    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
-spec:
-  package: crossplane/provider-sql:v0.6.0
+#@ load("@ytt:data", "data")
+
+#@ if data.values.custom.compositions.mssql.enabled:
 ---
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -312,3 +305,4 @@ spec:
           provider: terasky
           type: sqlserver
       compositionUpdatePolicy: Manual
+#@ end
