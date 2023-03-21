@@ -1,5 +1,6 @@
 #@ load("@ytt:data", "data")
 ---
+#@ id data.values.custom.tbs_full_dependencies.enabled:
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageRepository
 metadata:
@@ -10,4 +11,5 @@ metadata:
 spec:
   fetch:
     imgpkgBundle:
-      image: harbor.vrabbi.cloud/tap/tbs-full-deps:1.10.6
+      image: #@ "{}:{}".format(data.values.custom.tbs_full_dependencies.pkgr_repo_url,data.values.custom.tbs_full_dependencies.pkgr_version)
+#@ end
