@@ -1,0 +1,308 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+  name: xmongodbinstances.tap.terasky.com
+spec:
+  connectionSecretKeys:
+  - provider
+  - type
+  - host
+  - port
+  - database
+  - username
+  - password
+  group: tap.terasky.com
+  names:
+    kind: XMongoDBInstance
+    plural: xmongodbinstances
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            description: The OpenAPIV3Schema of this Composite Resource Definition.
+            properties:
+              storageGB:
+                default: 10
+                enum:
+                - 10
+                - 20
+                - 50
+                description: The desired storage capacity of the database, in Gigabytes.
+                type: integer
+            type: object
+        type: object
+    served: true
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xmongodbinstances.tap.terasky.com
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+  labels:
+    provider: bitnami
+    type: mongodb
+spec:
+  compositeTypeRef:
+    apiVersion: tap.terasky.com/v1alpha1
+    kind: XMongoDBInstance
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
+  resources:
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: Namespace
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+  - base:
+      apiVersion: helm.crossplane.io/v1beta1
+      kind: Release
+      spec:
+        forProvider:
+          chart:
+            name: mongodb
+            repository: https://charts.bitnami.com/bitnami
+            version: 13.9.1
+          namespace: ""
+          set:
+          - name: auth.usernames[0]
+            valueFrom:
+              secretKeyRef:
+                key: username
+                namespace: ""
+          - name: auth.passwords[0]
+            valueFrom:
+              secretKeyRef:
+                key: mongodb-passwords
+                namespace: ""
+          - name: auth.databases[0]
+            valueFrom:
+              secretKeyRef:
+                key: database
+                namespace: ""
+          values:
+            fullnameOverride: ''
+            persistence:
+              size: 10
+        providerConfigRef:
+          name: bitnami-services-provider-helm
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.values.fullnameOverride
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: spec.storageGB
+      toFieldPath: spec.forProvider.values.persistence.size
+      transforms:
+      - string:
+          fmt: '%dGi'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.set[0].valueFrom.secretKeyRef.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.set[1].valueFrom.secretKeyRef.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.set[2].valueFrom.secretKeyRef.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.values.auth.existingSecret
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.set[0].valueFrom.secretKeyRef.name
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.set[1].valueFrom.secretKeyRef.name
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.set[2].valueFrom.secretKeyRef.name
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: secretgen.k14s.io/v1alpha1
+            kind: Password
+            metadata:
+              namespace: ""
+            spec:
+              length: 32
+              secretTemplate:
+                stringData:
+                  mongodb-passwords: $(value)
+                  mongodb-root-password: $(value)
+                  port: '27017'
+                  provider: bitnami
+                  type: mongodb
+                  username: mongo
+                  database: ""
+                type: Opaque
+        providerConfigRef:
+          name: bitnami-services-provider-kubernetes
+    patches:
+    - type: CombineFromComposite
+      combine:
+        variables:
+        - fromFieldPath: metadata.name
+        - fromFieldPath: metadata.name
+        strategy: string
+        string:
+          fmt: "%s.%s.svc.cluster.local"
+      toFieldPath: spec.forProvider.manifest.spec.secretTemplate.stringData.host
+    - fromFieldPath: spec.writeConnectionSecretToRef.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.spec.secretTemplate.stringData.database
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+  - base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        references:
+        - patchesFrom:
+            apiVersion: v1
+            kind: Secret
+            name: ""
+            namespace: ""
+            fieldPath: data.mongodb-passwords
+          toFieldPath: data.password
+        - patchesFrom:
+            apiVersion: v1
+            kind: Secret
+            name: ""
+            namespace: ""
+            fieldPath: data.database
+        - patchesFrom:
+            apiVersion: v1
+            kind: Secret
+            name: ""
+            namespace: ""
+            fieldPath: data.host
+        forProvider:
+          manifest:
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: ""
+            type: connection.crossplane.io/v1alpha1
+            data:
+              port: MjcwMTc=
+              provider: Yml0bmFtaQ==
+              type: bW9uZ29kYg==
+              username: bW9uZ28=
+    patches:
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.references[0].patchesFrom.name
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.references[1].patchesFrom.name
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.references[2].patchesFrom.name
+      type: FromCompositeFieldPath
+      transforms:
+      - string:
+          fmt: '%s-values'
+          type: Format
+        type: string
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.references[0].patchesFrom.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.references[1].patchesFrom.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.references[2].patchesFrom.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: spec.writeConnectionSecretToRef.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+    - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClusterInstanceClass
+metadata:
+  annotations:
+    kapp.k14s.io/change-group: compositions
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+  name: mongodb-unmanaged
+spec:
+  description:
+    short: MongoDB by Bitnami
+  provisioner:
+    crossplane:
+      compositeResourceDefinition: xmongodbinstances.tap.terasky.com
+      compositionSelector:
+        matchLabels:
+          provider: bitnami
+          type: mongodb
+      compositionUpdatePolicy: Manual
