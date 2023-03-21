@@ -3,6 +3,10 @@
 ---
 custom:
   operators:
+    crossplane_sql_provider:
+      enabled: true
+      provider_version: "v0.6.0"
+      provider_package: "crossplane/provider-sql"
     tanzu_data_services_values:
       pkgr_version: "1.7.0"
       pkgr_repo: "harbor.vrabbi.cloud/tds/tds-packages"
