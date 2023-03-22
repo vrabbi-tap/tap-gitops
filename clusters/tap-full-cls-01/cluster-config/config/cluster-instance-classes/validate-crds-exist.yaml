@@ -4,7 +4,7 @@ metadata:
   name: clusterinstanceclasses.services.apps.tanzu.vmware.com
   annotations:
     kapp.k14s.io/exists: ""
-    kap.k14s.io/change-rule: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule: "upsert after upserting pkgi"
 spec:
   group: services.apps.tanzu.vmware.com
   versions:
@@ -18,7 +18,7 @@ metadata:
   name: compositions.apiextensions.crossplane.io
   annotations:
     kapp.k14s.io/exists: ""
-    kap.k14s.io/change-rule: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule: "upsert after upserting pkgi"
 spec:
   group: apiextensions.crossplane.io
   versions:
@@ -32,7 +32,7 @@ metadata:
   name: compositeresourcedefinitions.apiextensions.crossplane.io
   annotations:
     kapp.k14s.io/exists: ""
-    kap.k14s.io/change-rule: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule: "upsert after upserting pkgi"
 spec:
   group: apiextensions.crossplane.io
   versions:
@@ -46,7 +46,7 @@ metadata:
   name: providers.pkg.crossplane.io
   annotations:
     kapp.k14s.io/exists: ""
-    kap.k14s.io/change-rule: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule: "upsert after upserting pkgi"
 spec:
   group: pkg.crossplane.io
   versions:
