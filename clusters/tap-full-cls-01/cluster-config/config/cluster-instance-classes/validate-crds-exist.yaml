@@ -39,3 +39,17 @@ spec:
   - name: v1
   names:
     kind: CompositeResourceDefinition
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: providers.pkg.crossplane.io
+  annotations:
+    kapp.k14s.io/exists: ""
+    kap.k14s.io/change-rule: "upsert after upserting pkgi"
+spec:
+  group: pkg.crossplane.io
+  versions:
+  - name: v1
+  names:
+    kind: Provider
