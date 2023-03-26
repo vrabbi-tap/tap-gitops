@@ -28,6 +28,74 @@ stringData:
       name: app-deploy
     #@ end
     
+    #@ def cct_matcher():
+    apiVersion: carto.run/v1alpha1
+    kind: ClusterConfigTemplate
+    metadata:
+      name: config-template
+    #@ end
+    
+    #@ if not profiles.is_any_enabled([profiles.run]):
+    #@overlay/match by=overlay.subset(cct_matcher())
+    ---
+    spec:
+      ytt: |-
+        #@ load("@ytt:data", "data")
+        #@ load("@ytt:yaml", "yaml")
+        #@ load("@ytt:overlay", "overlay")
+        #@ def merge_labels(fixed_values):
+        #@   labels = {}
+        #@   if hasattr(data.values.workload.metadata, "labels"):
+        #@     labels.update(data.values.workload.metadata.labels)
+        #@   end
+        #@   labels.update(fixed_values)
+        #@   return labels
+        #@ end
+
+        #@ def fix_permissions():
+        spec:
+          containers:
+          #@overlay/match by="name"
+          #@overlay/match-child-defaults missing_ok=True
+          - name: workload
+            securityContext:
+              #@ if hasattr(data.values.config.spec.containers[0],"securityContext"):
+              #@ if not hasattr(data.values.config.spec.containers[0].securityContext, "runAsGroup"):
+              runAsGroup: 1000
+              #@ end
+              #@ if hasattr(data.values.config.spec.containers[0].securityContext, "runAsUser"):
+              #@ if data.values.config.spec.containers[0].securityContext.runAsUser == 1000:
+              runAsUser: 1001
+              #@ end
+              #@ end
+              #@ end
+        #@ end
+
+        #@ def delivery():
+        apiVersion: serving.knative.dev/v1
+        kind: Service
+        metadata:
+          name: #@ data.values.workload.metadata.name
+          #! annotations NOT merged because knative annotations would be invalid here
+          annotations:
+            ootb.apps.tanzu.vmware.com/servicebinding-workload: "true"
+            ootb.apps.tanzu.vmware.com/apidescriptor-ref: "true"
+            kapp.k14s.io/change-rule: "upsert after upserting servicebinding.io/ServiceBindings"
+          labels: #@ merge_labels({ "app.kubernetes.io/component": "run", "carto.run/workload-name": data.values.workload.metadata.name })
+        spec:
+          template: #@ overlay.apply(data.values.config,fix_permissions())
+        #@ end
+
+        ---
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: #@ data.values.workload.metadata.name
+          labels: #@ merge_labels({ "app.kubernetes.io/component": "config" })
+        data:
+          delivery.yml: #@ yaml.encode(delivery())
+    #@ end
+    
     #@ if not profiles.is_any_enabled([profiles.run]):
     #@overlay/match by=overlay.subset(ct_matcher())
     ---
