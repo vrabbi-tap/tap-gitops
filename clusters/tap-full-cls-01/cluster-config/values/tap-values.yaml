@@ -114,6 +114,9 @@ tap_install:
       - name: tap-gui
         secrets:
           - name: tap-gui-techdocs-overlay
+      - name: ootb-templates
+        secrets:
+        - name: ootb-templates-overlay
 
     namespace_provisioner:
       parameter_prefixes:
