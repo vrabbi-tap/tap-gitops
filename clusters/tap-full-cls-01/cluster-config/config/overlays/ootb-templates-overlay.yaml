@@ -92,7 +92,6 @@ stringData:
           labels: #@ merge_labels({ "app.kubernetes.io/component": "config" })
         data:
           delivery.yml: #@ yaml.encode(delivery())
-    #@ end
     
     #@overlay/match by=overlay.subset(ct_matcher())
     ---
@@ -117,7 +116,6 @@ stringData:
             --base "$(params.base_branch)" \
             --allow-update 2>&1 |
           tee stdoutAndSterr.txt
-    #@ end
     
     #@overlay/match by=overlay.subset(cdt_matcher())
     ---
