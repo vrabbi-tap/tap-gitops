@@ -65,6 +65,7 @@ spec:
   group: cert-manager.io
   versions:
   - name: v1
+  scope: Namespaced
   names:
     kind: Certificate
 ---
@@ -81,3 +82,4 @@ spec:
   - name: v1
   names:
     kind: Issuer
+  scope: Namespaced
