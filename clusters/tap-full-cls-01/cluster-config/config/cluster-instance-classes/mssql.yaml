@@ -378,6 +378,7 @@ spec:
       apiVersion: mssql.sql.crossplane.io/v1alpha1
       kind: Database
       spec:
+        deletionPolicy: Orphan
         forProvider: {}
     patches:
     - fromFieldPath: metadata.name
