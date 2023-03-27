@@ -84,7 +84,7 @@ spec:
               annotations:
                 secretgen.carvel.dev/image-pull-secret: ""
             type: kubernetes.io/dockerconfigjson
-            data: 
+            data:
               .dockerconfigjson: "e30K"
     patches:
     - fromFieldPath: metadata.name
@@ -94,6 +94,42 @@ spec:
       apiVersion: kubernetes.crossplane.io/v1alpha1
       kind: Object
       spec:
+        connectionDetails:
+        - apiVersion: v1
+          fieldPath: data.provider
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: provider
+        - apiVersion: v1
+          fieldPath: data.type
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: type
+        - apiVersion: v1
+          fieldPath: data.host
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: host
+        - apiVersion: v1
+          fieldPath: data.port
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: port
+        - apiVersion: v1
+          fieldPath: data.username
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: username
+        - apiVersion: v1
+          fieldPath: data.password
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: password
+        - apiVersion: v1
+          fieldPath: data.database
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: database
         forProvider:
           manifest:
             apiVersion: sql.tanzu.vmware.com/v1
@@ -101,111 +137,128 @@ spec:
             metadata:
               namespace: ""
             spec:
-              imagePullSecret: 
+              imagePullSecret:
                 name: regsecret
               highAvailability:
                 enabled: false
-            storageSize: 1Gi
+              storageSize: 1Gi
+        writeConnectionSecretToRef:
+          namespace: crossplane-system
+    connectionDetails:
+    - fromConnectionSecretKey: provider
+    - fromConnectionSecretKey: type
+    - fromConnectionSecretKey: host
+    - fromConnectionSecretKey: port
+    - fromConnectionSecretKey: username
+    - fromConnectionSecretKey: password
+    - fromConnectionSecretKey: database
     patches:
-      - fromFieldPath: metadata.name
-        toFieldPath: spec.forProvider.manifest.metadata.namespace
-        type: FromCompositeFieldPath         
-      - fromFieldPath: metadata.name
-        toFieldPath: spec.forProvider.manifest.metadata.name
-        type: FromCompositeFieldPath
-      - fromFieldPath: spec.replicas
-        toFieldPath: spec.forProvider.manifest.spec.replicas
-        type: FromCompositeFieldPath
-      - fromFieldPath: spec.storageGB
-        toFieldPath: spec.forProvider.manifest.spec.storageSize
-        transforms:
-        - string:
-            fmt: '%dGi'
-            type: Format
-          type: string
-        type: FromCompositeFieldPath
-  - base:
-      apiVersion: kubernetes.crossplane.io/v1alpha1
-      kind: Object
-      spec:
-        forProvider:
-          manifest:
-            apiVersion: secretgen.carvel.dev/v1alpha1
-            kind: SecretTemplate
-            metadata:
-              namespace: ""
-            spec:
-              inputResources:
-              - name: creds
-                ref:
-                  apiVersion: v1
-                  kind: Secret
-              template:
-                type: connection.crossplane.io/v1alpha1
-                data:
-                  provider: "$(.creds.data.provider)"
-                  type: "$(.creds.data.type)"
-                  host: "$(.creds.data.host)"
-                  port: "$(.creds.data.port)"
-                  username: "$(.creds.data.username)"
-                  password: "$(.creds.data.password)"
-                  database: "$(.creds.data.database)"
-    patches: 
-      - fromFieldPath: metadata.name
-        toFieldPath: spec.forProvider.manifest.metadata.namespace
-        type: FromCompositeFieldPath         
-      - fromFieldPath: metadata.name
-        toFieldPath: spec.forProvider.manifest.spec.inputResources[0].ref.name
-        transforms:
-        - string:
-            fmt: '%s-app-user-db-secret'
-            type: Format
-          type: string
-        type: FromCompositeFieldPath
-      - fromFieldPath: spec.writeConnectionSecretToRef.name
-        toFieldPath: spec.forProvider.manifest.metadata.name
-        type: FromCompositeFieldPath
-  - base:
-      apiVersion: kubernetes.crossplane.io/v1alpha1
-      kind: Object
-      spec:
-        forProvider:
-          manifest:
-            apiVersion: secretgen.carvel.dev/v1alpha1
-            kind: SecretExport
-            metadata:
-              namespace: ""
-    patches:
-      - fromFieldPath: metadata.name
-        toFieldPath: spec.forProvider.manifest.metadata.namespace
-        type: FromCompositeFieldPath         
-      - fromFieldPath: spec.writeConnectionSecretToRef.name
-        toFieldPath: spec.forProvider.manifest.metadata.name
-        type: FromCompositeFieldPath
-      - fromFieldPath: spec.writeConnectionSecretToRef.namespace
-        toFieldPath: spec.forProvider.manifest.spec.toNamespace
-        type: FromCompositeFieldPath
-  - base:
-      apiVersion: kubernetes.crossplane.io/v1alpha1
-      kind: Object
-      spec:
-        forProvider:
-          manifest:
-            apiVersion: secretgen.carvel.dev/v1alpha1
-            kind: SecretImport
-            spec:
-              fromNamespace: ""
-    patches:
-      - fromFieldPath: spec.writeConnectionSecretToRef.name
-        toFieldPath: spec.forProvider.manifest.metadata.name
-        type: FromCompositeFieldPath
-      - fromFieldPath: spec.writeConnectionSecretToRef.namespace
-        toFieldPath: spec.forProvider.manifest.metadata.namespace
-        type: FromCompositeFieldPath
-      - fromFieldPath: metadata.name
-        toFieldPath: spec.forProvider.manifest.spec.fromNamespace
-        type: FromCompositeFieldPath
-
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+      type: FromCompositeFieldPath
+    - fromFieldPath: spec.replicas
+      toFieldPath: spec.forProvider.manifest.spec.replicas
+      type: FromCompositeFieldPath
+    - fromFieldPath: spec.storageGB
+      toFieldPath: spec.forProvider.manifest.spec.storageSize
+      transforms:
+      - string:
+          fmt: '%dGi'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.writeConnectionSecretToRef.name
+      transforms:
+      - string:
+          fmt: '%s-rmq'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[0].name
+      transforms:
+      - string:
+          fmt: '%s-app-user-db-secret'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[1].name
+      transforms:
+      - string:
+          fmt: '%s-app-user-db-secret'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[2].name
+      transforms:
+      - string:
+          fmt: '%s-app-user-db-secret'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[3].name
+      transforms:
+      - string:
+          fmt: '%s-app-user-db-secret'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[4].name
+      transforms:
+      - string:
+          fmt: '%s-app-user-db-secret'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[5].name
+      transforms:
+      - string:
+          fmt: '%s-app-user-db-secret'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[6].name
+      transforms:
+      - string:
+          fmt: '%s-app-user-db-secret'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[0].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[1].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[2].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[3].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[4].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[5].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[6].namespace
+      type: FromCompositeFieldPath
+    readinessChecks:
+    - fieldPath: status.atProvider.manifest.status.currentState
+      matchString: Running
+      type: MatchString
 ---
 apiVersion: services.apps.tanzu.vmware.com/v1alpha1
 kind: ClusterInstanceClass
