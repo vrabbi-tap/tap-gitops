@@ -188,12 +188,12 @@ spec:
               name: mssql
             spec:
               length: 32
-              uppercaseLetters: 1
-              lowercaseLetters: 1
-              digits: 1
+              uppercaseLetters: 2
+              lowercaseLetters: 2
+              digits: 2
               secretTemplate:
                 stringData:
-                  MSSQL_SA_PASSWORD: $(value)
+                  MSSQL_SA_PASSWORD: P@ssw0rd$(value)
                 type: Opaque
         providerConfigRef:
           name: bitnami-services-provider-kubernetes
@@ -205,6 +205,44 @@ spec:
       apiVersion: kubernetes.crossplane.io/v1alpha1
       kind: Object
       spec:
+        connectionDetails:
+        - apiVersion: v1
+          fieldPath: data.provider
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: provider
+        - apiVersion: v1
+          fieldPath: data.type
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: type
+        - apiVersion: v1
+          fieldPath: data.host
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: host
+        - apiVersion: v1
+          fieldPath: data.port
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: port
+        - apiVersion: v1
+          fieldPath: data.username
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: username
+        - apiVersion: v1
+          fieldPath: data.password
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: password
+        - apiVersion: v1
+          fieldPath: data.database
+          kind: Secret
+          namespace: ""
+          toConnectionSecretKey: database
+        writeConnectionSecretToRef:
+          namespace: crossplane-system
         references:
         - patchesFrom:
             apiVersion: v1
@@ -219,6 +257,7 @@ spec:
             kind: Secret
             metadata:
               name: ""
+              namespace: ""
             type: connection.crossplane.io/v1alpha1
             stringData:
               port: '1433'
@@ -228,6 +267,14 @@ spec:
               database: ""
               host: ""
               endpoint: ""
+    connectionDetails:
+    - fromConnectionSecretKey: provider
+    - fromConnectionSecretKey: type
+    - fromConnectionSecretKey: host
+    - fromConnectionSecretKey: port
+    - fromConnectionSecretKey: username
+    - fromConnectionSecretKey: password
+    - fromConnectionSecretKey: database
     patches:
     - fromFieldPath: metadata.name
       toFieldPath: spec.references[0].patchesFrom.namespace
@@ -251,11 +298,61 @@ spec:
           fmt: 'mssql.%s.svc.cluster.local'
           type: Format
         type: string
-    - fromFieldPath: spec.writeConnectionSecretToRef.name
+    - fromFieldPath: metadata.name
       toFieldPath: spec.forProvider.manifest.metadata.name
       type: FromCompositeFieldPath
-    - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+    - fromFieldPath: metadata.name
       toFieldPath: spec.forProvider.manifest.metadata.namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.writeConnectionSecretToRef.name
+      transforms:
+      - string:
+          fmt: '%s-mssql'
+          type: Format
+        type: string
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[0].name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[1].name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[2].name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[3].name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[4].name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[5].name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[6].name
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[0].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[1].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[2].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[3].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[4].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[5].namespace
+      type: FromCompositeFieldPath
+    - fromFieldPath: metadata.name
+      toFieldPath: spec.connectionDetails[6].namespace
       type: FromCompositeFieldPath
   - base:
       apiVersion: mssql.sql.crossplane.io/v1alpha1
@@ -271,10 +368,12 @@ spec:
     patches:
     - fromFieldPath: spec.writeConnectionSecretToRef.name
       toFieldPath: metadata.name
-    - fromFieldPath: spec.writeConnectionSecretToRef.name
+    - fromFieldPath: metadata.name
       toFieldPath: spec.credentials.connectionSecretRef.name
-    - fromFieldPath: spec.writeConnectionSecretToRef.namespace
+    - fromFieldPath: metadata.name
       toFieldPath: spec.credentials.connectionSecretRef.namespace
+    readinessChecks:
+      - type: None
   - base:
       apiVersion: mssql.sql.crossplane.io/v1alpha1
       kind: Database
@@ -285,6 +384,8 @@ spec:
       toFieldPath: metadata.name
     - fromFieldPath: spec.writeConnectionSecretToRef.name
       toFieldPath: spec.providerConfigRef.name
+    readinessChecks:
+      - type: None
 ---
 apiVersion: services.apps.tanzu.vmware.com/v1alpha1
 kind: ClusterInstanceClass
