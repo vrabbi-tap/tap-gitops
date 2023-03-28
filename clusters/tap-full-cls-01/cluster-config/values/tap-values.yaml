@@ -16,10 +16,10 @@ tap_install:
 
     ootb_supply_chain_basic:
       gitops:
-#        server_address: https://github.com/
-#        repository_owner: vrabbi
-#        repository_name: tap-gitops
-#        branch: main
+        server_address: https://github.com/
+        repository_owner: vrabbi
+        repository_name: tap-gitops
+        branch: main
         ssh_secret: git-creds
 #        commit_strategy: pull_request
 #        pull_request:
