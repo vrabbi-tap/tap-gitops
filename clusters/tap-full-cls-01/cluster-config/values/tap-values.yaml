@@ -9,7 +9,10 @@ tap_install:
         username: "admin"
 
     ceip_policy_disclosed: true
-
+    
+    appliveview:
+      activateSensitiveOperations: true
+      
     profile: full
 
     supply_chain: basic
