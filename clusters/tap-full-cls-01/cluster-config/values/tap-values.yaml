@@ -10,7 +10,7 @@ tap_install:
 
     ceip_policy_disclosed: true
     
-    appliveview:
+    appliveview_connector:
       activateSensitiveOperations: true
       
     profile: full
