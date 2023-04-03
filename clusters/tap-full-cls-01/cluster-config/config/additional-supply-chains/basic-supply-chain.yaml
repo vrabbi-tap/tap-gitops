@@ -11,11 +11,7 @@
 #@      "server": "",
 #@      "repository": "",
 #@    },
-#@    if data_values.profile == "build":
-#@    "external_delivery": True
-#@    else:
 #@    "external_delivery": False
-#@    end
 #@  }
 #@  if hasattr(data_values, "ootb_supply_chain_testing_scanning") and data_values.ootb_supply_chain_testing_scanning:
 #@    values.update(struct.decode(data_values.ootb_supply_chain_testing_scanning))
