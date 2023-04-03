@@ -31,7 +31,7 @@
 #@      "repository": "",
 #@    },
 #@    "external_delivery": ext_dlv(data_values)
-#@  }:
+#@  }
 #@  values.update(struct.decode(get_sc_values(data_values)))
 #@  if hasattr(data_values.shared, "ca_cert_data") and data_values.shared.ca_cert_data:
 #@    values["registry"]["ca_cert_data"] = data_values.shared.ca_cert_data
