@@ -1,0 +1,63 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:yaml", "yaml")
+#@ load("@ytt:struct", "struct")
+#@ load("_profiles.star", "profiles")
+
+#@ def collect_values(data_values):
+#@  values = {
+#@    "registry": {
+#@      "ca_cert_data": "",
+#@      "server": "",
+#@      "repository": "",
+#@    },
+#@    "external_delivery": profiles.is_enabled(profiles.build),
+#@  }
+#@  if hasattr(data_values, "ootb_supply_chain_testing_scanning") and data_values.ootb_supply_chain_testing_scanning:
+#@    values.update(struct.decode(data_values.ootb_supply_chain_testing_scanning))
+#@  end
+#@  if hasattr(data_values.shared, "ca_cert_data") and data_values.shared.ca_cert_data:
+#@    values["registry"]["ca_cert_data"] = data_values.shared.ca_cert_data
+#@  end
+#@  if hasattr(data_values.shared, "image_registry") and hasattr(data_values.shared.image_registry, "project_path") and data_values.shared.image_registry.project_path:
+#@    if not hasattr(data_values, "ootb_supply_chain_testing_scanning") or not hasattr(data_values.ootb_supply_chain_testing_scanning, "registry") or not hasattr(data_values.ootb_supply_chain_testing_scanning.registry, "server") or not hasattr(data_values.ootb_supply_chain_testing_scanning.registry, "repository") or not data_values.ootb_supply_chain_testing_scanning.registry.server or not data_values.ootb_supply_chain_testing_scanning.registry.repository:
+#@      image_repository = data_values.shared.image_registry.project_path.split("/", 1)
+#@      values["registry"]["server"] = image_repository[0]
+#@      values["registry"]["repository"] = image_repository[1].rstrip("/") + "/workloads"
+#@    end
+#@  end
+#@  return struct.encode(values)
+#@ end
+
+#@ if profiles.is_any_enabled([profiles.full, profiles.light, profiles.iterate, profiles.build]):
+
+---
+apiVersion: packaging.carvel.dev/v1alpha1
+kind: PackageInstall
+metadata:
+  name: ootb-supply-chain-basic
+  namespace: tap-install
+  annotations:
+    kapp.k14s.io/change-rule.0: "upsert after upserting pkgi"
+    kapp.k14s.io/change-rule.1: "delete before deleting pkgi"
+spec:
+  serviceAccountName: tap-install-sa
+  packageRef:
+    refName: ootb-supply-chain-basic.tanzu.vmware.com
+    versionSelection:
+      constraints: 0.12.4
+      prereleases: {}
+  values:
+  - secretRef:
+      name: ootb-supply-chain-basic-values
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ootb-supply-chain-basic-values
+  namespace: tap-install
+type: Opaque
+stringData:
+  values.yml: #@ yaml.encode(collect_values(data.values))
+
+#@ end
+#@ end
