@@ -15,7 +15,7 @@
 #@   end
 #@ end
 
-#@ ext_dlv(data_values):
+#@ def ext_dlv(data_values):
 #@   if data_values.profile == "build":
 #@     return True
 #@   else:
