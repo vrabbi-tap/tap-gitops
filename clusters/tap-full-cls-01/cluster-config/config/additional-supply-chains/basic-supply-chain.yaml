@@ -1,7 +1,8 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:yaml", "yaml")
 #@ load("@ytt:struct", "struct")
-#@ load("_profiles.star", "profiles")
+
+#@ data_values = #@ data.values.tap_values.values
 
 #@ def collect_values(data_values):
 #@  values = {
@@ -10,7 +11,11 @@
 #@      "server": "",
 #@      "repository": "",
 #@    },
-#@    "external_delivery": profiles.is_enabled(profiles.build),
+#@    if data_values.profile == "build":
+#@    "external_delivery": True
+#@    else:
+#@    "external_delivery": False
+#@    end
 #@  }
 #@  if hasattr(data_values, "ootb_supply_chain_testing_scanning") and data_values.ootb_supply_chain_testing_scanning:
 #@    values.update(struct.decode(data_values.ootb_supply_chain_testing_scanning))
@@ -28,7 +33,7 @@
 #@  return struct.encode(values)
 #@ end
 
-#@ if profiles.is_any_enabled([profiles.full, profiles.light, profiles.iterate, profiles.build]):
+#@ if data_values.profile == "full" or  data_values.profile == "light" or data_values.profile == "iterate" or data_values.profile == "build":
 
 ---
 apiVersion: packaging.carvel.dev/v1alpha1
@@ -57,6 +62,6 @@ metadata:
   namespace: tap-install
 type: Opaque
 stringData:
-  values.yml: #@ yaml.encode(collect_values(data.values))
+  values.yml: #@ yaml.encode(collect_values(data_values))
 
 #@ end
