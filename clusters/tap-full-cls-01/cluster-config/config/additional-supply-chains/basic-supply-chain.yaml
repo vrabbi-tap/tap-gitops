@@ -2,7 +2,7 @@
 #@ load("@ytt:yaml", "yaml")
 #@ load("@ytt:struct", "struct")
 
-#@ data_values = data.values.tap_values.values
+#@ data_values = data.values.tap_install.values
 
 #@ def collect_values(data_values):
 #@  values = {
