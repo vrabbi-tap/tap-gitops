@@ -60,4 +60,3 @@ stringData:
   values.yml: #@ yaml.encode(collect_values(data.values))
 
 #@ end
-#@ end
