@@ -22,7 +22,7 @@ tap_install:
         server_address: https://github.com/
         repository_owner: vrabbi
         repository_name: tap-gitops
-        branch: main
+        branch: demo
         ssh_secret: git-creds
 #        commit_strategy: pull_request
 #        pull_request:
