@@ -36,7 +36,7 @@ stringData:
             - >-
                 dockerd --host tcp://127.0.0.1:2375 &
                 sleep 10 &&
-                DOCKER_HOST=tcp://127.0.0.1:2375 docker pull spotify/techdocs:v1.1.2 &&
+                DOCKER_HOST=tcp://127.0.0.1:2375 docker pull spotify/techdocs:v1.2.0 &&
                 wait ${!}
             image: ghcr.io/vrabbi/docker:dind-rootless
             imagePullPolicy: IfNotPresent
