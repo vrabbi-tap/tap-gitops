@@ -63,7 +63,7 @@ spec:
   packageRef:
     refName: ootb-supply-chain-basic.tanzu.vmware.com
     versionSelection:
-      constraints: 0.12.4
+      constraints: 0.12.5
       prereleases: {}
   values:
   - secretRef:
