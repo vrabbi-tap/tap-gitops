@@ -79,7 +79,7 @@ tap_install:
           - host: github.com
         techdocs:
           generator:
-            dockerImage: spotify/techdocs:v1.1.2
+            dockerImage: spotify/techdocs:v1.2.0
             pullImage: false
             runIn: "docker"
         catalog:
