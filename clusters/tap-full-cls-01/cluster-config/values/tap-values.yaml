@@ -86,6 +86,11 @@ tap_install:
                 - url: https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/index.html
                   title: Tanzu Application Platform Documentation
         integrations:
+          bitbucketServer:
+          - host: 10.100.116.154:7990
+            apiBaseUrl: http://10.100.116.154:7990/rest/api/1.0
+            username: scott
+            password: VMware1!
           github:
           - host: github.com
         techdocs:
