@@ -3,7 +3,26 @@ tap_install:
     shared:
       ingress_domain: "tap-lab.terasky.demo"
       ingress_issuer: "tap-ingress-selfsigned"
-
+      ca_cert_data: |
+        -----BEGIN CERTIFICATE-----
+        MIIDHzCCAgegAwIBAgIRANzEvNJ7NUMGlLRiJ+yPUVowDQYJKoZIhvcNAQELBQAw
+        KTEnMCUGA1UEAxMedGFwLWluZ3Jlc3Mtc2VsZnNpZ25lZC1yb290LWNhMB4XDTIz
+        MDMyMTE2MDUyN1oXDTIzMDYxOTE2MDUyN1owKTEnMCUGA1UEAxMedGFwLWluZ3Jl
+        c3Mtc2VsZnNpZ25lZC1yb290LWNhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+        CgKCAQEA1lD/uulQCUqgpYY0KKHPMMmvO/oZhLAWuf1XPgI7HeafDXa4bAXPgWyU
+        93bkMm0Ir1Owe5+6/GS/rbXT2LwuluIpWfbEUAFREYlZdNmr2bsfmGAJytL45Euz
+        W00KAagp3Hxac4xoGu+spRT0KiWspoPcnNktrHSqqT+ApxojNlVVlDC9Bcd+hMdL
+        jzpnngS3pOjw8c5bOfhYMr1Pos+b2fyqohpPlqpO2ZXkusiFO6X+Y6FNXxlNy+zB
+        SXi+n9CBgJQ20/bvDOHizz31N7JYfGR9QDlPJAlcMNXXMi7kF24MI/938QLOb5Bp
+        m/s2Tmlh1Q/ofPr+gMTuiFefyS1VPQIDAQABo0IwQDAOBgNVHQ8BAf8EBAMCAqQw
+        DwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUjKyP5mBeHyXE4+b6mVKwD+1DgnYw
+        DQYJKoZIhvcNAQELBQADggEBAEBiu9oxbdl27W9rECyyY5L80fS9Kbov+Zo4O6UY
+        Mj9eb7a15OUMs5Xy2bJQ94FYpvYoYM4Bx5TPslu25yDWUSQ+ExZBr7+DjhLnBofe
+        mV0jzq4Wk2j3vdhs02BztsL8XfwB8csppr21pZzHMZD29wANVnoHoDrNVjT+v9Sa
+        vvxeSFFuq0w8mTXX/gM9WbRyo9XSDpTqFbur8lWoCO1AK2Bbk027xF7iDB41xYto
+        BEt6yd/ULPf2X1yZU7YBjf2HSCWWpBApE9RX4qk4uD985Y7OqnWYLf9epPQx7r3E
+        KMKKMqDkaQn5+um5glbZJXluXDkGO8jEi4bZDsL0irq5uU8=
+        -----END CERTIFICATE-----
       image_registry:
         project_path: "harbor.vrabbi.cloud/tap"
         username: "admin"
