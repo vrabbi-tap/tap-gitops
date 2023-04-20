@@ -54,7 +54,10 @@ tap_install:
       envoy:
         service:
           type: LoadBalancer
-
+    api_portal:
+      apiPortalServer:
+        sourceUrls: "http://scg-operator.tap-install.svc.cluster.local/openapi"
+        trustInsecureSourceUrls: true
     buildservice:
       kp_default_repository: harbor.vrabbi.cloud/tap/build-service
       kp_default_repository_username: admin
