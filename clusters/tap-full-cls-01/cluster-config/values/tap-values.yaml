@@ -56,7 +56,7 @@ tap_install:
           type: LoadBalancer
     api_portal:
       apiPortalServer:
-        sourceUrls: "http://scg-operator.tap-install.svc.cluster.local/openapi"
+        sourceUrls: "http://scg-operator.tap-install.svc.cluster.local/openapi, https://petstore.swagger.io/v2/swagger.json"
         trustInsecureSourceUrls: true
     buildservice:
       kp_default_repository: harbor.vrabbi.cloud/tap/build-service
