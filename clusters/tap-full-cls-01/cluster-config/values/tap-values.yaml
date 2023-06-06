@@ -37,6 +37,15 @@ tap_install:
     supply_chain: testing_scanning
 
     ootb_supply_chain_testing_scanning:
+      supported_workloads:
+      - cluster_config_template_name: config-template
+        type: web
+      - cluster_config_template_name: server-template
+        type: server
+      - cluster_config_template_name: worker-template
+        type: worker
+      - cluster_config_template_name: config-template-helm
+        type: helm
       gitops:
         server_address: https://github.com/
         repository_owner: vrabbi
