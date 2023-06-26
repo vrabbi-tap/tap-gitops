@@ -46,6 +46,8 @@ tap_install:
         type: worker
       - cluster_config_template_name: config-template-helm
         type: helm
+      - cluster_config_template_name: discovery-template
+        type: disc
       gitops:
         server_address: https://github.com/
         repository_owner: vrabbi
