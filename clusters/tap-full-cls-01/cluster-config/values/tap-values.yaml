@@ -167,6 +167,9 @@ tap_install:
       - name: ootb-templates
         secrets:
         - name: ootb-templates-overlay
+      - name: tap-auth
+        secrets:
+        - name: tap-tmc-auth-overlay
 
     namespace_provisioner:
       parameter_prefixes:
